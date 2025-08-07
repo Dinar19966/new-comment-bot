@@ -3,6 +3,7 @@ import { HttpModule } from '@nestjs/axios';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PostService } from './post.service';
 import { RedisService } from 'src/common/redis/redis.service';
+import { HTTP_MAX_REDIRECTS } from './post.interface';
 
 @Module({
   imports: [
@@ -10,7 +11,7 @@ import { RedisService } from 'src/common/redis/redis.service';
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
         timeout: configService.get<number>('HTTP_TIMEOUT', 5000),
-        maxRedirects: configService.get<number>('HTTP_MAX_REDIRECTS', 3),
+        maxRedirects: HTTP_MAX_REDIRECTS,
       }),
       inject: [ConfigService],
     }),

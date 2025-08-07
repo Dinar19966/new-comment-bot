@@ -18,6 +18,7 @@ export const POST_CATEGORY_ID="740e8a83-61d9-4309-818c-85af564190b1"
 export const POSTS_LIMIT=30
 export const MAX_POST_AGE_DAYS=7
 export const HTTP_TIMEOUT=5000
+export const HTTP_MAX_REDIRECTS=3
 
 export enum BlogCategoryId {
   INVESTING = 'f5c55b3a-7a24-41f6-a430-3de5505384e2',
