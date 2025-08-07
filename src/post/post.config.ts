@@ -1,0 +1,5 @@
+export const POST_SERVICE_CONFIG = {
+  POSTS_LIMIT: 50,
+  MAX_POST_AGE_DAYS: 3,
+  POST_CATEGORY_ID: '', 
+};
