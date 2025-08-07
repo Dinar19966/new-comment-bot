@@ -15,8 +15,14 @@ export class ScheduleService {
     private readonly configService: ConfigService,
     private readonly schedulerRegistry: SchedulerRegistry,
   ) {
-    this.minComments = this.configService.get<number>('MIN_COMMENTS_PER_DAY', 20);
-    this.maxComments = this.configService.get<number>('MAX_COMMENTS_PER_DAY', 30);
+    this.minComments = this.configService.get<number>(
+      'MIN_COMMENTS_PER_DAY',
+      20,
+    );
+    this.maxComments = this.configService.get<number>(
+      'MAX_COMMENTS_PER_DAY',
+      30,
+    );
     this.workHours = {
       start: this.configService.get<number>('WORK_HOURS_START', 9),
       end: this.configService.get<number>('WORK_HOURS_END', 19),
@@ -35,10 +41,7 @@ export class ScheduleService {
 
   private scheduleSingleTask(index: number) {
     const delayMs = this.calculateRandomDelay();
-    const timeout = setTimeout(
-      () => this.executeCommentTask(index),
-      delayMs,
-    );
+    const timeout = setTimeout(() => this.executeCommentTask(index), delayMs);
 
     this.schedulerRegistry.addTimeout(`comment_task_${index}`, timeout);
   }
@@ -73,7 +76,7 @@ export class ScheduleService {
 
     const minTime = Math.max(todayStart.getTime(), now.getTime());
     const maxTime = todayEnd.getTime();
-    
+
     return this.getRandomInt(minTime - now.getTime(), maxTime - now.getTime());
   }
 

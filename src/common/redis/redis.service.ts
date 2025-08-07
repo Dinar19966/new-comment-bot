@@ -10,7 +10,7 @@ export class RedisService {
   constructor() {
     this.redis = new Redis({
       host: process.env.REDIS_HOST || 'localhost',
-      port: parseInt(process.env.REDIS_PORT ?? "6379"),
+      port: parseInt(process.env.REDIS_PORT ?? '6379'),
       password: process.env.REDIS_PASSWORD,
       db: parseInt(process.env.REDIS_DB || '0'),
     });
@@ -62,7 +62,10 @@ export class RedisService {
     try {
       return (await this.redis.exists(key)) === 1;
     } catch (error) {
-      this.logger.error(`Failed to check existence for key ${key}`, error.stack);
+      this.logger.error(
+        `Failed to check existence for key ${key}`,
+        error.stack,
+      );
       throw error;
     }
   }
@@ -88,11 +91,7 @@ export class RedisService {
     comment: string,
     ttlHours = 24,
   ): Promise<void> {
-    await this.set(
-      `comment:${postContentHash}`,
-      comment,
-      ttlHours * 60 * 60,
-    );
+    await this.set(`comment:${postContentHash}`, comment, ttlHours * 60 * 60);
   }
 
   async incrementCounter(key: string): Promise<number> {

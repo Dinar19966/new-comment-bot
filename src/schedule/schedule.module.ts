@@ -5,11 +5,7 @@ import { ScheduleService } from './schedule.service';
 import { CommentModule } from '../comment/comment.module';
 
 @Module({
-  imports: [
-    ScheduleModule.forRoot(),
-    ConfigModule,
-    CommentModule,
-  ],
+  imports: [ScheduleModule.forRoot(), ConfigModule, CommentModule],
   providers: [ScheduleService],
   exports: [ScheduleService], // Если нужно использовать в других модулях
 })

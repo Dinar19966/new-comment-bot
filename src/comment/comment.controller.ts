@@ -3,7 +3,6 @@ import { CommentService } from './comment.service';
 import { LoggingInterceptor } from 'src/common/interseptors/logging.interseptor';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
-
 @ApiTags('Comments')
 @Controller('comments')
 @UseInterceptors(LoggingInterceptor)
@@ -19,8 +18,8 @@ export class CommentController {
     const result = await this.commentService.generateAndSendComment();
     return {
       success: result,
-      message: result 
-        ? 'Comment posted successfully' 
+      message: result
+        ? 'Comment posted successfully'
         : 'No available posts or posting failed',
     };
   }

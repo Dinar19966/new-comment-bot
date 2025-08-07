@@ -21,7 +21,10 @@ export class PostService {
   ) {
     this.apiUrl = this.configService.getOrThrow<string>('POST_API_URL');
     this.postsLimit = this.configService.get<number>('POSTS_LIMIT', 30);
-    this.maxPostAgeDays = this.configService.get<number>('MAX_POST_AGE_DAYS', 200);
+    this.maxPostAgeDays = this.configService.get<number>(
+      'MAX_POST_AGE_DAYS',
+      200,
+    );
     this.categoryId = this.configService.get<string>('POST_CATEGORY_ID'); // ← не getOrThrow, т.к. опционально
   }
 
@@ -62,7 +65,7 @@ export class PostService {
 
       const cutoffDate = DateTime.now().minus({ days: this.maxPostAgeDays });
 
-      const recentPosts = posts.filter(post => {
+      const recentPosts = posts.filter((post) => {
         const isNew = DateTime.fromISO(post.createdAt) > cutoffDate;
         const hasNoComments = post.commentsCount === 0;
         return isNew && hasNoComments;
@@ -95,7 +98,9 @@ export class PostService {
       post.plainText ||
       post.title ||
       'Без текста'
-    ).trim().substring(0, 500);
+    )
+      .trim()
+      .substring(0, 500);
   }
 
   async markPostAsProcessed(postId: string): Promise<void> {

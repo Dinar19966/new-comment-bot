@@ -8,8 +8,6 @@ import { PostModule } from './post/post.module';
 import { ScheduleTaskModule } from './schedule/schedule.module';
 import { RedisModule } from './common/redis/redis.module';
 
-
-
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -26,7 +24,7 @@ import { RedisModule } from './common/redis/redis.module';
     GeneratorModule,
     PostModule,
     ScheduleTaskModule,
-    RedisModule
+    RedisModule,
   ],
 })
 export class AppModule {}

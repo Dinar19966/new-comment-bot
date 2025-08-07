@@ -20,7 +20,8 @@ export class CommentService {
     private readonly configService: ConfigService,
     private readonly httpService: HttpService,
   ) {
-    this.commentApiUrl = this.configService.getOrThrow<string>('COMMENT_API_URL');
+    this.commentApiUrl =
+      this.configService.getOrThrow<string>('COMMENT_API_URL');
     this.authToken = this.configService.getOrThrow<string>('X_AUTH_TOKEN');
   }
 
@@ -36,7 +37,9 @@ export class CommentService {
       this.logger.debug(`📝 Selected post: ${post.id}`);
 
       const commentText = await this.generateValidComment(post.text);
-      this.logger.debug(`💬 Generated comment: ${commentText.substring(0, 100)}...`);
+      this.logger.debug(
+        `💬 Generated comment: ${commentText.substring(0, 100)}...`,
+      );
 
       const success = await this.sendComment(post.id, commentText);
 
@@ -74,48 +77,47 @@ export class CommentService {
   }
 
   private buildCommentPayload(postId: string, text: string) {
-  return {
-    postId,
-    parentId: null,
-    content: {
-      editorState: {
-        root: {
-          type: 'root',
-          indent: 0,
-          version: 1,
-          format: '',
-          direction: null,
-          children: [
-            {
-              version: 1,
-              children: [
-                {
-                  type: 'text',
-                  style: '',
-                  format: 0,
-                  mode: 'normal',
-                  version: 1,
-                  detail: 0,
-                  text,
-                },
-              ],
-              format: '',
-              type: 'paragraph',
-              indent: 0,
-              direction: null,
-            },
-          ],
+    return {
+      postId,
+      parentId: null,
+      content: {
+        editorState: {
+          root: {
+            type: 'root',
+            indent: 0,
+            version: 1,
+            format: '',
+            direction: null,
+            children: [
+              {
+                version: 1,
+                children: [
+                  {
+                    type: 'text',
+                    style: '',
+                    format: 0,
+                    mode: 'normal',
+                    version: 1,
+                    detail: 0,
+                    text,
+                  },
+                ],
+                format: '',
+                type: 'paragraph',
+                indent: 0,
+                direction: null,
+              },
+            ],
+          },
         },
       },
-    },
-  };
-}
-
+    };
+  }
 
   private getAuthHeaders() {
     return {
       'Content-Type': 'application/json',
-      'Cookie': `x-auth-token=${this.authToken}`,
+      Cookie: `x-auth-token=${this.authToken}`,
     };
   }
 
@@ -124,7 +126,9 @@ export class CommentService {
     const headers = this.getAuthHeaders();
 
     this.logger.debug(`📡 Sending POST to ${this.commentApiUrl}`);
-    this.logger.verbose(`Payload: ${JSON.stringify(payload).substring(0, 300)}...`);
+    this.logger.verbose(
+      `Payload: ${JSON.stringify(payload).substring(0, 300)}...`,
+    );
     try {
       await firstValueFrom(
         this.httpService.post(this.commentApiUrl, payload, {
