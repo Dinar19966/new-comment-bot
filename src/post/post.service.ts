@@ -4,7 +4,7 @@ import { Injectable, Logger } from '@nestjs/common'
 import { HttpService } from '@nestjs/axios'
 import { ConfigService } from '@nestjs/config'
 import { RedisService } from 'src/common/redis/redis.service'
-import { ApiPost, PostDto } from './post.interface'
+import { ApiPost, POST_API_URL, PostDto } from './post.interface'
 import { POST_SERVICE_CONFIG } from './post.config'
 
 @Injectable()
@@ -20,7 +20,7 @@ export class PostService {
     private readonly configService: ConfigService,
     private readonly redisService: RedisService,
   ) {
-    this.apiUrl = this.configService.getOrThrow<string>('POST_API_URL')
+    this.apiUrl = POST_API_URL
     this.postsLimit = POST_SERVICE_CONFIG.POSTS_LIMIT
     this.maxPostAgeDays = POST_SERVICE_CONFIG.MAX_POST_AGE_DAYS
     this.categoryId = POST_SERVICE_CONFIG.POST_CATEGORY_ID

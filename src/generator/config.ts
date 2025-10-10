@@ -1,7 +1,7 @@
 export const DEFAULT_GENERATION_PARAMS = {
   model: 'gpt-3.5-turbo',
   temperature: 0.6,
-  maxTokens: 80,
+  maxTokens: 180,
   cacheTtl: 3600,
   retryCount: 2,
 }

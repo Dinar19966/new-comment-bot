@@ -44,7 +44,7 @@ export class CommentService {
       const success = await this.sendComment(post.id, commentText);
 
       if (success) {
-        this.logger.log(`✅ Successfully commented on post ${post.id}`);
+        this.logger.log(`✅ Successfully commented on https://finbazar.ru/post/${post.id}`);
       } else {
         this.logger.warn(`❌ Failed to comment on post ${post.id}`);
       }
