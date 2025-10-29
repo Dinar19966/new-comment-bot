@@ -1,17 +1,20 @@
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
-
 generator client {
   provider = "prisma-client-js"
 }
 
+datasource db {
+  provider = "postgresql"
+  url      = "postgresql://bazar:bazar@localhost:5432/comment?schema=public"
+}
+
+
 model Account {
-  id           String   @id @default(uuid())
-  phone        String   @unique
-  token        String?
-  refreshToken String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id              String   @id @default(uuid())
+  phone           String   @unique
+  accessToken     String?
+  refreshToken    String?
+  accessExpiresAt DateTime?
+  status          String   @default("active")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }

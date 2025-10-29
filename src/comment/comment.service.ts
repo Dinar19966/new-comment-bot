@@ -6,12 +6,12 @@ import { GeneratorService } from 'src/generator/generator.service';
 import { PostService } from 'src/post/post.service';
 import { RedisService } from 'src/common/redis/redis.service';
 import { PostDto } from 'src/post/post.interface';
+import { AuthService } from 'src/auth/auth.service';
 
 @Injectable()
 export class CommentService {
   private readonly logger = new Logger(CommentService.name);
   private readonly commentApiUrl: string;
-  private readonly authToken: string;
 
   constructor(
     private readonly generatorService: GeneratorService,
@@ -19,12 +19,13 @@ export class CommentService {
     private readonly redisService: RedisService,
     private readonly configService: ConfigService,
     private readonly httpService: HttpService,
+    private readonly authService: AuthService, // интеграция с AuthService
   ) {
     this.commentApiUrl =
       this.configService.getOrThrow<string>('COMMENT_API_URL');
-    this.authToken = this.configService.getOrThrow<string>('X_AUTH_TOKEN');
   }
 
+  /** Основной метод: выбирает пост, генерирует и отправляет комментарий */
   async generateAndSendComment(): Promise<boolean> {
     this.logger.log('📤 Starting comment generation');
     try {
@@ -44,7 +45,9 @@ export class CommentService {
       const success = await this.sendComment(post.id, commentText);
 
       if (success) {
-        this.logger.log(`✅ Successfully commented on https://finbazar.ru/post/${post.id}`);
+        this.logger.log(
+          `✅ Successfully commented on https://finbazar.ru/post/${post.id}`,
+        );
       } else {
         this.logger.warn(`❌ Failed to comment on post ${post.id}`);
       }
@@ -56,9 +59,11 @@ export class CommentService {
     }
   }
 
+  /** Находит первый доступный пост, на который ещё не был оставлен комментарий */
   private async findAvailablePost(): Promise<PostDto | null> {
     const posts = await this.postService.getRecentPosts();
     this.logger.debug(`🔍 Checking ${posts.length} posts for availability`);
+
     for (const post of posts) {
       const seen = await this.redisService.isAlreadyCommented(post.id);
       if (!seen) {
@@ -71,11 +76,13 @@ export class CommentService {
     return null;
   }
 
+  /** Генерация комментария через GeneratorService */
   private async generateValidComment(text: string): Promise<string> {
     const comment = await this.generatorService.generateComment(text);
     return comment.trim().substring(0, 500);
   }
 
+  /** Формируем payload для API */
   private buildCommentPayload(postId: string, text: string) {
     return {
       postId,
@@ -114,26 +121,36 @@ export class CommentService {
     };
   }
 
-  private getAuthHeaders() {
+  /** Генерация заголовков с динамическим токеном от AuthService */
+  private getAuthHeaders(token: string) {
     return {
       'Content-Type': 'application/json',
-      Cookie: `x-auth-token=${this.authToken}`,
+      Authorization: `Bearer ${token}`,
     };
   }
 
+  /** Отправка комментария через API */
   private async sendComment(postId: string, text: string): Promise<boolean> {
+    // выбираем случайный аккаунт
+    const accounts = await this.authService.listAccounts();
+    if (!accounts.length) {
+      this.logger.warn('⚠️ Нет доступных аккаунтов');
+      return false;
+    }
+    const account = accounts[Math.floor(Math.random() * accounts.length)];
+    const token = await this.authService.getAccessToken(account.id);
+
     const payload = this.buildCommentPayload(postId, text);
-    const headers = this.getAuthHeaders();
+    const headers = this.getAuthHeaders(token);
 
     this.logger.debug(`📡 Sending POST to ${this.commentApiUrl}`);
     this.logger.verbose(
       `Payload: ${JSON.stringify(payload).substring(0, 300)}...`,
     );
+
     try {
       await firstValueFrom(
-        this.httpService.post(this.commentApiUrl, payload, {
-          headers,
-        }),
+        this.httpService.post(this.commentApiUrl, payload, { headers }),
       );
 
       await this.redisService.markAsCommented(postId);

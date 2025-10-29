@@ -6,6 +6,7 @@ import { GeneratorModule } from '../generator/generator.module';
 import { PostModule } from '../post/post.module';
 import { RedisService } from 'src/common/redis/redis.service';
 import { HttpModule } from '@nestjs/axios';
+import { AuthModule } from 'src/auth/auth.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { HttpModule } from '@nestjs/axios';
     }),
     GeneratorModule,
     PostModule,
+    AuthModule,
   ],
   providers: [CommentService, RedisService],
   controllers: [CommentController],

@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
-import { PrismaService } from '../../prisma/prisma.service';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class AuthService {
@@ -15,7 +15,7 @@ export class AuthService {
     private readonly config: ConfigService,
     private readonly prisma: PrismaService,
   ) {
-    this.baseUrl = 'https://finbazar.ru/api/gate/api';
+    this.baseUrl = 'https://finbazar.ru';
   }
 
   private async requestOtp(phone: string) {
@@ -23,7 +23,7 @@ export class AuthService {
     await firstValueFrom(this.http.post(url, { phone, purpose: 'sign_in' }));
   }
 
-  private async signIn(phone: string, code = '1111') {
+  private async signIn(phone: string, code = '1489') {
     const url = `${this.baseUrl}/auth/sign-in`;
     const resp = await firstValueFrom(this.http.post(url, { phone, code }));
     return resp.data as { token: string; refreshToken: string };
