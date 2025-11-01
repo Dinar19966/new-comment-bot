@@ -19,18 +19,18 @@ export class AuthService {
   }
 
   private async requestOtp(phone: string) {
-    const url = `${this.baseUrl}/auth/request-otp`;
+    const url = `${this.baseUrl}/api/gate/auth/request-otp`;
     await firstValueFrom(this.http.post(url, { phone, purpose: 'sign_in' }));
   }
 
   private async signIn(phone: string, code = '1489') {
-    const url = `${this.baseUrl}/auth/sign-in`;
+    const url = `${this.baseUrl}/api/gate/auth/sign-in`;
     const resp = await firstValueFrom(this.http.post(url, { phone, code }));
     return resp.data as { token: string; refreshToken: string };
   }
 
   private async refreshToken(refreshToken: string) {
-    const url = `${this.baseUrl}/auth/refresh-token`;
+    const url = `${this.baseUrl}/api/gate/auth/token`;
     const body = { refreshToken, grantType: 'refresh_token' };
     const resp = await firstValueFrom(this.http.post(url, body));
     return resp.data as { token: string; refreshToken: string };
@@ -124,4 +124,68 @@ export class AuthService {
       throw new Error('Refresh failed, need re-auth');
     }
   }
+
+/** Переавторизирует все аккаунты, у которых status = 'need_reauth' */
+async forceReauthAll() {
+  this.logger.log('🔄 Запуск массовой переавторизации аккаунтов...');
+
+  const accounts = await this.prisma.account.findMany({
+    where: { status: 'need_reauth' },
+  });
+
+  if (!accounts.length) {
+    this.logger.log('✅ Нет аккаунтов, требующих повторной авторизации');
+    return;
+  }
+
+  for (const acc of accounts) {
+    this.logger.log(`📲 Переавторизация: ${acc.phone}`);
+
+    try {
+      await this.requestOtp(acc.phone);
+
+      let tokenResp;
+      const maxRetries = 5;
+
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          // пробуем войти с фиксированным OTP
+          tokenResp = await this.signIn(acc.phone, '1489');
+          break; // вышли если удалось
+        } catch (e) {
+          // если 400 — ждём и пробуем снова
+          if (e.response?.status === 400) {
+            this.logger.warn(`⏳ OTP ещё не готов для ${acc.phone}, попытка ${attempt}`);
+            await new Promise(res => setTimeout(res, 6000)); // ждём 1 сек
+          } else {
+            throw e; // другие ошибки пробрасываем
+          }
+        }
+      }
+
+      if (!tokenResp) throw new Error('Не удалось войти после нескольких попыток');
+
+      // обновляем в БД
+      await this.prisma.account.update({
+        where: { id: acc.id },
+        data: {
+          accessToken: tokenResp.token,
+          refreshToken: tokenResp.refreshToken,
+          accessExpiresAt: new Date(Date.now() + this.accessTtlMs),
+          status: 'active',
+        },
+      });
+
+      this.logger.log(`✅ ${acc.phone} успешно переавторизован`);
+    } catch (e) {
+      this.logger.error(`❌ Ошибка при реавторизации ${acc.phone}: ${e.message}`);
+    }
+
+    // задержка перед следующим аккаунтом
+    await new Promise(res => setTimeout(res, 500)); // 0.5 сек
+  }
+
+  this.logger.log('🏁 Массовая переавторизация завершена');
+}
+
 }
